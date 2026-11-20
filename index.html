@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f0c18">
+<title>IdeaScape Capture</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0f0c18; --glow:rgba(140,110,255,.16); --ink:rgba(236,232,248,.94); --dim:rgba(200,194,225,.46);
+  --line:rgba(255,255,255,.09); --chip:rgba(255,255,255,.07); --accent:#8c6eff; --accent2:#6f8dff;
+  --rec:#e05555; --ok:#5fcf9a;
+}
+@media (prefers-color-scheme:light){
+  :root{ --bg:#f3f1f8; --glow:rgba(120,90,230,.12); --ink:rgba(24,20,38,.92); --dim:rgba(50,42,70,.5);
+    --line:rgba(0,0,0,.1); --chip:rgba(0,0,0,.05); --accent:#6f4fe6; --accent2:#4f74e6; }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:'DM Sans',system-ui,sans-serif}
+body{height:100dvh;display:flex;flex-direction:column;overflow:hidden;
+  background:radial-gradient(120% 60% at 50% -10%,var(--glow),transparent 60%),var(--bg);
+  padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px 4px;flex-shrink:0}
+.mark{font-size:11px;letter-spacing:2.4px;text-transform:uppercase;color:var(--dim)}
+.hr{display:flex;align-items:center;gap:8px}
+.chip{display:none;font:inherit;font-size:12px;color:var(--ink);background:var(--chip);border:1px solid var(--line);
+  border-radius:100px;padding:5px 11px;cursor:pointer}
+.chip.on{display:block}
+.icon{width:36px;height:36px;border-radius:50%;border:none;background:transparent;color:var(--dim);cursor:pointer;
+  display:grid;place-items:center;position:relative}
+.icon svg{width:20px;height:20px}
+.dot{position:absolute;top:7px;right:7px;width:7px;height:7px;border-radius:50%;background:var(--rec);display:none}
+.dot.off{display:block}
+main{flex:1;display:flex;flex-direction:column;min-height:0;padding:6px 22px 0}
+#ta{flex:1;min-height:0;width:100%;resize:none;border:none;outline:none;background:transparent;color:var(--ink);
+  font:inherit;font-size:21px;line-height:1.5;padding:10px 0;caret-color:var(--accent)}
+#ta::placeholder{color:var(--dim)}
+#thumbs{display:flex;gap:10px;overflow-x:auto;padding:6px 0 12px;flex-shrink:0;scrollbar-width:none}
+#thumbs:empty{display:none}
+.th{position:relative;flex-shrink:0}
+.th img{height:76px;width:auto;max-width:130px;border-radius:10px;display:block;object-fit:cover;border:1px solid var(--line)}
+.th button{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;border:1px solid var(--line);
+  background:var(--bg);color:var(--ink);font-size:13px;line-height:1;cursor:pointer;padding:0}
+footer{flex-shrink:0;padding:6px 22px 18px;display:flex;flex-direction:column;gap:16px}
+.row{display:flex;align-items:center;justify-content:center;gap:34px}
+.sq{width:56px;height:56px;border-radius:50%;border:1px solid var(--line);background:var(--chip);color:var(--ink);
+  display:grid;place-items:center;cursor:pointer}
+.sq svg{width:24px;height:24px}
+.sq.hint{animation:hint 1.2s ease-in-out infinite;border-color:var(--accent)}
+@keyframes hint{50%{box-shadow:0 0 0 8px var(--glow)}}
+#mic{width:92px;height:92px;border-radius:50%;border:none;cursor:pointer;color:#fff;display:grid;place-items:center;
+  background:linear-gradient(145deg,var(--accent),var(--accent2));position:relative;
+  box-shadow:0 10px 30px -8px var(--accent);transition:transform .15s,background .2s}
+#mic svg{width:36px;height:36px}
+#mic:active{transform:scale(.94)}
+#mic.live{background:var(--rec);box-shadow:0 10px 30px -8px var(--rec)}
+#mic.live::after{content:"";position:absolute;inset:-9px;border-radius:50%;border:2px solid var(--rec);opacity:.5;animation:pulse 1.4s ease-out infinite}
+@keyframes pulse{from{transform:scale(.92);opacity:.6}to{transform:scale(1.22);opacity:0}}
+.lbl{text-align:center;font-size:12px;letter-spacing:.4px;color:var(--dim);height:14px;margin-top:-6px}
+#send{width:100%;height:54px;border:none;border-radius:100px;font:inherit;font-size:16px;font-weight:500;color:#fff;cursor:pointer;
+  background:linear-gradient(145deg,var(--accent),var(--accent2));transition:opacity .2s,transform .12s}
+#send:disabled{opacity:.28;cursor:default}
+#send:not(:disabled):active{transform:scale(.98)}
+#toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 58px);transform:translate(-50%,-8px);opacity:0;pointer-events:none;
+  background:var(--ink);color:var(--bg);font-size:14px;padding:9px 16px;border-radius:100px;transition:all .22s;z-index:30;
+  max-width:88vw;text-align:center}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#sheet{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.5);display:none;align-items:flex-end}
+#sheet.open{display:flex}
+.card{width:100%;max-height:92dvh;overflow-y:auto;background:var(--bg);border-top:1px solid var(--line);border-radius:22px 22px 0 0;
+  padding:22px 22px calc(26px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:14px}
+.card h2{margin:0;font-size:18px;font-weight:500}
+.card p,.card li{margin:0;font-size:14px;line-height:1.55;color:var(--dim)}
+.card ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:5px}
+.card b{color:var(--ink);font-weight:500}
+.card a{color:var(--accent)}
+.card input{width:100%;height:48px;border-radius:12px;border:1px solid var(--line);background:var(--chip);color:var(--ink);
+  font:inherit;font-size:16px;padding:0 14px;outline:none}
+.card input:focus{border-color:var(--accent)}
+.card label{font-size:12px;letter-spacing:.4px;color:var(--dim)}
+.btn{height:48px;border-radius:100px;border:none;font:inherit;font-size:15px;font-weight:500;cursor:pointer;color:#fff;
+  background:linear-gradient(145deg,var(--accent),var(--accent2))}
+.btn.ghost{background:var(--chip);color:var(--ink);border:1px solid var(--line)}
+.state{font-size:13px;min-height:18px}
+.state.ok{color:var(--ok)} .state.bad{color:var(--rec)}
+</style>
+</head>
+<body>
+<header>
+  <span class="mark">ideascape · capture</span>
+  <div class="hr">
+    <button class="chip" id="chip"></button>
+    <button class="icon" id="gear" aria-label="Settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3h0a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5h0a1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9v0a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+      <span class="dot" id="dot"></span>
+    </button>
+  </div>
+</header>
+
+<main>
+  <textarea id="ta" placeholder="What's the idea?" autocomplete="off" autocapitalize="sentences" enterkeyhint="done"></textarea>
+  <div id="thumbs"></div>
+</main>
+
+<footer>
+  <div class="row">
+    <button class="sq" id="cam" aria-label="Take photo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+    </button>
+    <button id="mic" aria-label="Speak">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></svg>
+    </button>
+    <button class="sq" id="pick" aria-label="Add photos or screenshots">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+    </button>
+  </div>
+  <div class="lbl" id="lbl">tap to speak</div>
+  <button id="send" disabled>Send to canvas</button>
+</footer>
+
+<div id="toast"></div>
+
+<div id="sheet">
+  <div class="card">
+    <h2>Connect your canvas inbox</h2>
+    <div class="state" id="state"></div>
+    <p>Ideas are saved to a private GitHub repo that your canvas reads from. This phone needs a token that can write to that one repo, and nothing else.</p>
+    <ol id="steps">
+      <li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub → new fine-grained token</a></li>
+      <li><b>Repository access:</b> only <b>ideascape-inbox</b></li>
+      <li><b>Permissions → Contents:</b> Read and write</li>
+      <li>Generate, copy, paste below</li>
+    </ol>
+    <label for="tokenIn">Token</label>
+    <input id="tokenIn" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="github_pat_…">
+    <label for="langIn">Speech language</label>
+    <input id="langIn" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="en-US">
+    <button class="btn" id="connect">Connect</button>
+    <button class="btn ghost" id="close">Close</button>
+  </div>
+</div>
+
+<input type="file" id="camIn" accept="image/*" capture="environment" hidden>
+<input type="file" id="pickIn" accept="image/*" multiple hidden>
+
+<script src="core.js"></script>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const ta = $('ta'), thumbs = $('thumbs'), send = $('send'), mic = $('mic'), lbl = $('lbl');
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let imgs = [], sharedMeta = null, lang = navigator.language || 'en-US';
+  let rec = null, listening = false, committed = '';
+
+  /* ---------- small helpers ---------- */
+  let toastT;
+  function toast(msg, ms = 2200) {
+    const t = $('toast'); t.textContent = msg; t.classList.add('show');
+    clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), ms);
+  }
+  const buzz = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (_) {} };
+  function refresh() { send.disabled = !(ta.value.trim() || imgs.length); }
+
+  /* ---------- photos ---------- */
+  async function shrink(file) {
+    try {
+      const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' });
+      const s = Math.min(1, 1800 / Math.max(bmp.width, bmp.height));
+      const c = document.createElement('canvas');
+      c.width = Math.round(bmp.width * s); c.height = Math.round(bmp.height * s);
+      c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+      if (bmp.close) bmp.close();
+      return await new Promise(r => c.toBlob(b => r(b || file), 'image/jpeg', 0.86));
+    } catch (_) { return file; }
+  }
+  async function addFiles(files) {
+    for (const f of files) {
+      if (!f.type.startsWith('image/')) continue;
+      const blob = await shrink(f);
+      imgs.push({ blob, url: URL.createObjectURL(blob) });
+    }
+    renderThumbs(); refresh();
+  }
+  function renderThumbs() {
+    thumbs.innerHTML = '';
+    imgs.forEach((im, i) => {
+      const d = document.createElement('div'); d.className = 'th';
+      d.innerHTML = '<img alt=""><button aria-label="Remove">×</button>';
+      d.firstChild.src = im.url;
+      d.lastChild.onclick = () => { URL.revokeObjectURL(im.url); imgs.splice(i, 1); renderThumbs(); refresh(); };
+      thumbs.appendChild(d);
+    });
+  }
+  $('cam').onclick = () => { $('cam').classList.remove('hint'); $('camIn').click(); };
+  $('pick').onclick = () => $('pickIn').click();
+  $('camIn').onchange = e => { addFiles([...e.target.files]); e.target.value = ''; };
+  $('pickIn').onchange = e => { addFiles([...e.target.files]); e.target.value = ''; };
+
+  /* ---------- voice ---------- */
+  function setListening(on) {
+    listening = on;
+    mic.classList.toggle('live', on);
+    lbl.textContent = on ? 'listening… tap to stop' : 'tap to speak';
+  }
+  function startVoice() {
+    if (!SR) { toast('Voice isn’t supported here — just type'); return; }
+    committed = ta.value; if (committed && !/\s$/.test(committed)) committed += ' ';
+    rec = new SR(); rec.lang = lang; rec.continuous = false; rec.interimResults = true;
+    rec.onresult = e => {
+      let interim = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const r = e.results[i];
+        if (r.isFinal) committed += r[0].transcript.trim() + ' '; else interim += r[0].transcript;
+      }
+      ta.value = committed + interim; ta.scrollTop = ta.scrollHeight; refresh();
+    };
+    rec.onend = () => {
+      if (listening) { try { rec.start(); } catch (_) { setListening(false); } }
+      else { committed = ta.value; }
+    };
+    rec.onerror = e => {
+      if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+        setListening(false); toast('Microphone is blocked — allow it in the site settings', 4000);
+      } else if (e.error === 'network') {
+        setListening(false); toast('Voice needs a connection — type it instead', 3500);
+      }
+    };
+    try { rec.start(); setListening(true); buzz(10); } catch (_) { setListening(false); }
+  }
+  function stopVoice() {
+    if (!listening) return;
+    setListening(false);
+    try { rec.stop(); } catch (_) {}
+    buzz(8);
+  }
+  mic.onclick = () => (listening ? stopVoice() : startVoice());
+  ta.addEventListener('input', () => { committed = ta.value; refresh(); });
+
+  /* ---------- sending ---------- */
+  async function updateChip() {
+    const n = (await outboxAll()).length, c = $('chip');
+    c.textContent = n + ' waiting'; c.classList.toggle('on', n > 0);
+    $('dot').classList.toggle('off', !(await kvGet('token')));
+  }
+  function registerSync() {
+    navigator.serviceWorker && navigator.serviceWorker.ready
+      .then(r => r.sync && r.sync.register('flush')).catch(() => {});
+  }
+  async function flushAndReport(quiet) {
+    const r = await flushOutbox(); await updateChip();
+    if (!r.left) { if (r.sent && !quiet) toast('In your inbox ✓'); return r; }
+    const s = r.err && r.err.status;
+    if (s === 401 || s === 403 || s === 404 || (r.err && r.err.message === 'no-token')) {
+      if (!quiet) toast('Saved — connect your inbox to send', 3500); openSheet();
+    } else if (!quiet) toast('Saved — will send when you’re online', 3000);
+    return r;
+  }
+  async function submit() {
+    const text = ta.value.trim();
+    if (!text && !imgs.length) return;
+    stopVoice();
+    await outboxPut({ id: newId(), created: new Date().toISOString(), text, images: imgs.map(i => i.blob), shared: sharedMeta });
+    imgs.forEach(i => URL.revokeObjectURL(i.url));
+    imgs = []; sharedMeta = null; ta.value = ''; committed = '';
+    renderThumbs(); refresh(); buzz(14); toast('Saved');
+    registerSync();
+    await flushAndReport(false);
+  }
+  send.onclick = submit;
+
+  /* ---------- share target ---------- */
+  async function loadShared() {
+    const all = await sharedAll(); if (!all.length) return;
+    const parts = [], files = [];
+    sharedMeta = null;
+    for (const s of all) {
+      if (s.text) parts.push(s.text);
+      if (s.url && !(s.text || '').includes(s.url)) parts.push(s.url);
+      if (s.url || s.title) sharedMeta = { url: s.url || '', title: s.title || '' };
+      files.push(...(s.files || []));
+    }
+    await sharedClear();
+    if (parts.length) ta.value = (ta.value ? ta.value + '\n' : '') + parts.join('\n');
+    committed = ta.value;
+    await addFiles(files); refresh();
+    if (files.length || parts.length) toast('Add a note if you like, then send', 3000);
+  }
+
+  /* ---------- settings ---------- */
+  const sheet = $('sheet');
+  async function openSheet() {
+    $('tokenIn').value = ''; $('langIn').value = lang;
+    const has = !!(await kvGet('token'));
+    $('state').className = 'state ' + (has ? 'ok' : 'bad');
+    $('state').textContent = has ? 'Connected ✓ (paste a new token to replace it)' : 'Not connected yet';
+    sheet.classList.add('open');
+  }
+  $('gear').onclick = openSheet;
+  $('close').onclick = () => sheet.classList.remove('open');
+  $('connect').onclick = async () => {
+    const st = $('state'), tok = $('tokenIn').value.trim(), l = $('langIn').value.trim();
+    if (l) { lang = l; await kvSet('lang', l); }
+    if (!tok) { if (await kvGet('token')) { sheet.classList.remove('open'); } return; }
+    st.className = 'state'; st.textContent = 'Checking…';
+    try {
+      const r = await fetch(`${CFG.api}/repos/${CFG.owner}/${CFG.repo}`, { headers: { Authorization: 'Bearer ' + tok, Accept: 'application/vnd.github+json' } });
+      if (!r.ok) throw new Error(r.status === 404 ? 'That token can’t see the ideascape-inbox repo' : r.status === 401 ? 'GitHub rejected that token' : 'GitHub error ' + r.status);
+      const j = await r.json();
+      if (j.permissions && j.permissions.push === false) throw new Error('Token is read-only — set Contents to Read and write');
+      await kvSet('token', tok);
+      st.className = 'state ok'; st.textContent = 'Connected ✓';
+      await updateChip(); toast('Connected ✓');
+      setTimeout(() => sheet.classList.remove('open'), 600);
+      flushAndReport(true);
+    } catch (e) { st.className = 'state bad'; st.textContent = e.message || 'Could not connect'; }
+  };
+
+  /* ---------- boot ---------- */
+  (async () => {
+    const saved = await kvGet('lang'); if (saved) lang = saved;
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+    await updateChip();
+    const q = new URLSearchParams(location.search);
+    if (q.get('shared')) await loadShared();
+    if (q.has('shared') || q.has('mic') || q.has('cam')) history.replaceState(null, '', location.pathname);
+    if (!(await kvGet('token'))) openSheet();
+    else if (q.get('mic')) startVoice();
+    if (q.get('cam')) $('cam').classList.add('hint');
+    refresh();
+    flushOutbox().then(updateChip);
+  })();
+  window.addEventListener('online', () => flushAndReport(true));
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) flushAndReport(true); });
+})();
+</script>
+</body>
+</html>
